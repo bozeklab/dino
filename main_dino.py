@@ -126,6 +126,10 @@ def get_args_parser():
     parser.add_argument("--dist_url", default="env://", type=str, help="""url used to set up
         distributed training; see https://pytorch.org/docs/stable/distributed.html""")
     parser.add_argument("--local_rank", default=0, type=int, help="Please ignore and do not set this argument.")
+
+    parser.add_argument('--finetune', default=None, type=str,
+        help="Path to model checkpoint to finetune")
+
     return parser
 
 
@@ -253,6 +257,17 @@ def train_dino(args):
 
     # ============ optionally resume training ... ============
     to_restore = {"epoch": 0}
+    if args.finetune is not None:
+        utils.restart_from_checkpoint(
+        args.finetune,
+        run_variables=to_restore,
+        student=student,
+        teacher=teacher,
+        optimizer=optimizer,
+        fp16_scaler=fp16_scaler,
+        dino_loss=dino_loss,
+    )
+
     utils.restart_from_checkpoint(
         os.path.join(args.output_dir, "checkpoint.pth"),
         run_variables=to_restore,
